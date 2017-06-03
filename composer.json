@@ -1,0 +1,29 @@
+{
+  "name": "inhere/queue",
+  "type": "library",
+  "description": "queue library of the php",
+  "keywords": ["library","queue", "php-queue", "db-queue", "sysv-queue", "redis-queue","php"],
+  "homepage": "https://github.com/inhere/php-queue",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "inhere",
+      "email": "in.798@qq.com",
+      "homepage": "http://www.yzone.net/"
+    }
+  ],
+  "require": {
+    "php": ">=7.0.0",
+    "inhere/library": "dev-master",
+    "inhere/shm": "dev-master"
+  },
+  "autoload": {
+    "psr-4": {
+      "inhere\\queue\\" : "src/"
+    }
+  },
+  "suggest": {
+    "inhere/console": "a lightweight php console application library.",
+    "inhere/php-validate": "Very lightweight data validate tool"
+  }
+}
