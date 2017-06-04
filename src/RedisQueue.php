@@ -48,25 +48,28 @@ class RedisQueue extends BaseQueue
      */
     protected function doPush($data, $priority = self::PRIORITY_NORM)
     {
-        $channels = array_values($this->getChannels());
-
-        if (isset($channels[$priority])) {
-            $data = $this->encode($data);
-
-            return $this->redis->lPush($channels[$priority], $data);
+        if (!$this->isPriority($priority)) {
+            $priority = self::PRIORITY_NORM;
         }
 
-        return false;
+        return $this->redis->lPush($this->channels[$priority], $this->encode($data));
     }
 
     /**
      * {@inheritDoc}
      */
-    protected function doPop()
+    protected function doPop($priority = null, $block = false)
     {
+        // 只想取出一个 $priority 队列的数据
+        if ($priority !== null && $this->isPriority($priority)) {
+            $channel = $this->channels[$priority];
+
+            return $block ? $this->redis->brPop([$channel], 3) : $this->redis->rPop($channel);
+        }
+
         $data = null;
 
-        foreach ($this->getChannels() as $channel) {
+        foreach ($this->channels as $channel) {
             if ($data = $this->redis->rPop($channel)) {
                 $data = $this->decode($data);
                 break;

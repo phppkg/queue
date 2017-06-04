@@ -22,7 +22,7 @@ class SysVQueue extends BaseQueue
     private $msgType = 1;
 
     /**
-     * @var resource[]
+     * @var \SplFixedArray
      */
     private $queues = [];
 
@@ -67,10 +67,8 @@ class SysVQueue extends BaseQueue
 
         $this->msgType = (int)$this->config['msgType'];
 
-        // create queues
-        foreach ($this->getIntChannels() as $id) {
-            $this->queues[] = msg_get_queue($id);
-        }
+        // 初始化队列列表. 使用时再初始化需要的队列
+        $this->queues = new \SplFixedArray(count($this->getPriorities()));
     }
 
     /**
@@ -78,56 +76,72 @@ class SysVQueue extends BaseQueue
      */
     protected function doPush($data, $priority = self::PRIORITY_NORM)
     {
-        // 如果队列满了，这里会阻塞
+        // $blocking = true 如果队列满了，这里会阻塞
         // bool msg_send(
         //      resource $queue, int $msgtype, mixed $message
         //      [, bool $serialize = true [, bool $blocking = true [, int &$errorcode ]]]
         // )
 
-        if (isset($this->queues[$priority])) {
-            return msg_send(
-                $this->queues[$priority],
-                $this->msgType,
-                $this->encode($data),
-                false,
-                $this->config['blocking'],
-                $this->errCode
-            );
+        if (!$this->isPriority($priority)) {
+            $priority = self::PRIORITY_NORM;
         }
 
-        return false;
+        // create queue if it not exists.
+        $this->createQueue($priority);
+
+        return msg_send(
+            $this->queues[$priority],
+            $this->msgType,
+            $this->encode($data),
+            false,
+            $this->config['blocking'],
+            $this->errCode
+        );
     }
 
     /**
      * {@inheritDoc}
      */
-    protected function doPop()
+    protected function doPop($priority = null, $block = false)
     {
         // bool msg_receive(
         //      resource $queue, int $desiredmsgtype, int &$msgtype, int $maxsize,
         //      mixed &$message [, bool $unserialize = true [, int $flags = 0 [, int &$errorcode ]]]
         //  )
 
-        $data = null;
+        // 只想取出一个 $priority 队列的数据
+        if ($priority !== null && $this->isPriority($priority)) {
+            // $priority 级别的队列还未初始化。create queue if it not exists.
+            $this->createQueue($priority);
+            $flags = $block ? 0 : (MSG_IPC_NOWAIT | MSG_NOERROR);
 
-        foreach ($this->queues as $queue) {
             $success = msg_receive(
-                $queue,
+                $this->queues[$priority],
                 0,  // 0 $this->msgType,
                 $this->msgType,   // $this->msgType,
                 $this->config['bufferSize'],
                 $data,
                 false,
 
-                // 0: 默认值，无消息后会阻塞等待。(这里不能用它，不然无法读取后面两个队列的数据)
+                // 0: 默认值，无消息后会阻塞等待。(要取多个队列数据时，不能用它，不然无法读取后面两个队列的数据)
                 // MSG_IPC_NOWAIT 无消息后不等待
                 // MSG_EXCEPT
                 // MSG_NOERROR 消息超过大小限制时，截断数据而不报错
-                MSG_IPC_NOWAIT | MSG_NOERROR,
+                $flags,
                 $this->errCode
             );
 
             if ($success) {
+                return $this->decode($data);
+            }
+
+            return null;
+        }
+
+        $data = null;
+
+        foreach ($this->queues as $priority => $queue) {
+            if (($data = $this->doPop($priority, false)) !== null) {
                 $data = $this->decode($data);
                 break;
             }
@@ -137,9 +151,20 @@ class SysVQueue extends BaseQueue
     }
 
     /**
-     * @return resource[]
+     * @param int $priority
      */
-    public function getQueues(): array
+    protected function createQueue($priority)
+    {
+        if (!$this->queues[$priority]) {
+            $key = $this->getIntChannels()[$priority];
+            $this->queues[$priority] = msg_get_queue($key);
+        }
+    }
+
+    /**
+     * @return \SplFixedArray
+     */
+    public function getQueues()
     {
         return $this->queues;
     }
@@ -191,7 +216,7 @@ class SysVQueue extends BaseQueue
     /**
      * close
      */
-    protected function close()
+    public function close()
     {
         parent::close();
 

@@ -7,6 +7,7 @@
  */
 
 namespace inhere\queue;
+use inhere\library\helpers\PhpHelper;
 
 /**
  * Class ShmQueue - shared memory queue
@@ -15,7 +16,7 @@ namespace inhere\queue;
 class ShmQueue extends BaseQueue
 {
     /**
-     * @var array
+     * @var \SplFixedArray
      */
     private $queues = [];
 
@@ -23,12 +24,12 @@ class ShmQueue extends BaseQueue
      * @var array
      */
     protected $config = [
-        'id' => null,
+        'key' => null,
         'serialize' => true,
 
         'size' => 256000,
         'project' => 'php_shm', // shared memory, semaphore
-        'tmpPath' => './', // tmp path
+        'tmpDir' => '/tmp', // tmp path
     ];
 
     /**
@@ -42,13 +43,11 @@ class ShmQueue extends BaseQueue
             $this->id = (int)$this->config['id'];
         } else {
             // 定义共享内存,信号量key
-            $this->id = $this->config['id'] = $this->ftok(__FILE__, $this->config['project']);
+            $this->id = $this->config['id'] = PhpHelper::ftok(__FILE__, $this->config['project']);
         }
 
         // create queues
-        foreach ($this->getIntChannels() as $id) {
-            $this->queues[] = null; // isset() will return false.
-        }
+        $this->queues = new \SplFixedArray(count($this->getPriorities()));
     }
 
     /**
@@ -62,9 +61,9 @@ class ShmQueue extends BaseQueue
     }
 
     /**
-     * @return mixed
+     * {@inheritDoc}
      */
-    protected function doPop()
+    protected function doPop($priority = null, $block = false)
     {
         // TODO: Implement doPop() method.
     }
@@ -72,7 +71,7 @@ class ShmQueue extends BaseQueue
     /**
      * {@inheritDoc}
      */
-    protected function close()
+    public function close()
     {
         // 释放共享内存与信号量
 //        shm_remove($shareMemory);
@@ -102,70 +101,36 @@ class ShmQueue extends BaseQueue
         }
     }
 
-    protected function write($shmId, $name, $value)
-    {
-
-    }
-
-    protected function read($shmId, $name = null)
-    {
-        $key = $this->getIntChannels()[$priority];
-    }
-
-    protected function delete($shmId, $name)
-    {
-        $map = $this->read($shmId);
-    }
-
     /**
-     * 共享锁定
-     * @param int|string $semId
-     * @return resource
+     * @param int $priority
      */
-    private function lock($semId)
+    protected function createQueue($priority)
     {
-        if (function_exists('sem_get')) {
-            $fp = sem_get($semId);
-            sem_acquire($fp);
-        } else {
-            $fp = fopen($this->config['tmpPath'] . '/' . md5($semId) . '.sem', 'w');
-            flock($fp, LOCK_EX);
-        }
-
-        return $fp;
-    }
-
-    /**
-     * 解除共享锁定
-     * @param resource $fp
-     * @return bool
-     */
-    private function unlock(&$fp)
-    {
-        if (function_exists('sem_release')) {
-            return sem_release($fp);
-        } else {
-            return fclose($fp);
+        if (!$this->queues[$priority]) {
+            $key = $this->getIntChannels()[$priority];
+            $this->queues[$priority] = msg_get_queue($key);
         }
     }
 
     /**
-     * @param $pathname
-     * @param $projectId
-     * @return int|string
+     * @return \SplFixedArray
      */
-    private function ftok($pathname, $projectId)
+    public function getQueues()
     {
-        if (function_exists('ftok')) {
-            return ftok($pathname, $projectId);
-        }
-
-        if (!$st = @stat($pathname)) {
-            return -1;
-        }
-
-        $key = sprintf("%u", (($st['ino'] & 0xffff) | (($st['dev'] & 0xff) << 16) | (($projectId & 0xff) << 24)));
-
-        return $key;
+        return $this->queues;
     }
+
+    /**
+     * @param int $priority
+     * @return \SplQueue|false
+     */
+    public function getQueue($priority = self::PRIORITY_NORM)
+    {
+        if (!isset($this->getPriorities()[$priority])) {
+            return false;
+        }
+
+        return $this->queues[$priority];
+    }
+
 }

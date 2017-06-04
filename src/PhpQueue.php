@@ -20,7 +20,7 @@ class PhpQueue extends BaseQueue
     protected $driver = QueueFactory::DRIVER_PHP;
 
     /**
-     * @var \SplQueue[]
+     * @var \SplFixedArray
      */
     private $queues = [];
 
@@ -36,10 +36,7 @@ class PhpQueue extends BaseQueue
         }
 
         // create queues
-        foreach ($this->getPriorities() as $level) {
-            $this->queues[$level] = new \SplQueue();
-            $this->queues[$level]->setIteratorMode(\SplQueue::IT_MODE_DELETE);
-        }
+        $this->queues = new \SplFixedArray(count($this->getPriorities()));
     }
 
     /**
@@ -47,21 +44,33 @@ class PhpQueue extends BaseQueue
      */
     protected function doPush($data, $priority = self::PRIORITY_NORM)
     {
-        if (isset($this->queues[$priority])) {
-            $this->queues[$priority]->enqueue($this->encode($data)); // can use push().
+        if (!$this->isPriority($priority)) {
+            $priority = self::PRIORITY_NORM;
         }
 
-        return true;
+        $this->createQueue($priority);
+
+        return $this->queues[$priority]->enqueue($this->encode($data)); // can use push().
     }
 
     /**
      * {@inheritDoc}
      */
-    protected function doPop()
+    protected function doPop($priority = null, $block = false)
     {
+        // 只想取出一个 $priority 队列的数据
+        if ($priority !== null && $this->isPriority($priority)) {
+            $this->createQueue($priority);
+            $data = $this->queues[$priority]->dequeue();
+
+            return $this->decode($data);
+        }
+
         $data = null;
 
         foreach ($this->queues as $queue) {
+            $this->createQueue($priority);
+
             // valid()
             if (!$queue->isEmpty()) {
                 // can use shift().
@@ -75,9 +84,20 @@ class PhpQueue extends BaseQueue
     }
 
     /**
-     * @return \SplQueue[]
+     * @param int $priority
      */
-    public function getQueues(): array
+    protected function createQueue($priority)
+    {
+        if (!$this->queues[$priority]) {
+            $this->queues[$priority] = new \SplQueue();
+            $this->queues[$priority]->setIteratorMode(\SplQueue::IT_MODE_DELETE);
+        }
+    }
+
+    /**
+     * @return \SplFixedArray
+     */
+    public function getQueues()
     {
         return $this->queues;
     }
@@ -113,7 +133,7 @@ class PhpQueue extends BaseQueue
     /**
      * close
      */
-    protected function close()
+    public function close()
     {
         parent::close();
 

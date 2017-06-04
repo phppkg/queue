@@ -51,12 +51,12 @@ abstract class BaseQueue implements QueueInterface
     /**
      * @var array
      */
-    private $channels = [];
+    protected $channels = [];
 
     /**
      * @var array
      */
-    private $intChannels = [];
+    protected $intChannels = [];
 
     /**
      * MsgQueue constructor.
@@ -67,6 +67,10 @@ abstract class BaseQueue implements QueueInterface
         $this->setConfig($config);
 
         $this->init();
+
+        // init property
+        $this->getChannels();
+        $this->getIntChannels();
     }
 
     /**
@@ -203,15 +207,24 @@ abstract class BaseQueue implements QueueInterface
     }
 
     /**
+     * @param int $priority
+     * @return bool
+     */
+    public function isPriority($priority)
+    {
+        return in_array((int)$priority, $this->getPriorities(), true);
+    }
+
+    /**
      * @return array
      */
     public function getChannels()
     {
         if (!$this->channels) {
             $this->channels = [
-                'high' => $this->id . self::PRIORITY_HIGH_SUFFIX,
-                'norm' => $this->id,
-                'low' => $this->id . self::PRIORITY_LOW_SUFFIX,
+                self::PRIORITY_HIGH => $this->id . self::PRIORITY_HIGH_SUFFIX,
+                self::PRIORITY_NORM => $this->id,
+                self::PRIORITY_LOW => $this->id . self::PRIORITY_LOW_SUFFIX,
             ];
         }
 
@@ -226,9 +239,9 @@ abstract class BaseQueue implements QueueInterface
         if (!$this->intChannels) {
             $id = (int)$this->id;
             $this->intChannels = [
-                'high' => $id + self::PRIORITY_HIGH,
-                'norm' => $id + self::PRIORITY_NORM,
-                'low' => $id + self::PRIORITY_LOW,
+                self::PRIORITY_HIGH => $id + self::PRIORITY_HIGH,
+                self::PRIORITY_NORM => $id + self::PRIORITY_NORM,
+                self::PRIORITY_LOW => $id + self::PRIORITY_LOW,
             ];
         }
 
@@ -276,7 +289,7 @@ abstract class BaseQueue implements QueueInterface
     /**
      * close
      */
-    protected function close()
+    public function close()
     {
         $this->_events = [];
     }
