@@ -7,7 +7,9 @@
  */
 
 namespace inhere\queue;
+
 use inhere\library\helpers\PhpHelper;
+use inhere\shm\ShmMap;
 
 /**
  * Class ShmQueue - shared memory queue
@@ -16,7 +18,7 @@ use inhere\library\helpers\PhpHelper;
 class ShmQueue extends BaseQueue
 {
     /**
-     * @var \SplFixedArray
+     * @var ShmMap[]
      */
     private $queues = [];
 
@@ -39,11 +41,11 @@ class ShmQueue extends BaseQueue
     {
         parent::init();
 
-        if ($this->config['id'] > 0) {
-            $this->id = (int)$this->config['id'];
+        if ($this->config['key'] > 0) {
+            $this->id = (int)$this->config['key'];
         } else {
             // 定义共享内存,信号量key
-            $this->id = $this->config['id'] = PhpHelper::ftok(__FILE__, $this->config['project']);
+            $this->id = $this->config['key'] = PhpHelper::ftok(__FILE__, $this->config['project']);
         }
 
         // create queues
@@ -57,7 +59,13 @@ class ShmQueue extends BaseQueue
      */
     protected function doPush($data, $priority = self::PRIORITY_NORM)
     {
-        // TODO: Implement doPush() method.
+        if (!$this->isPriority($priority)) {
+            $priority = self::PRIORITY_NORM;
+        }
+
+        $this->createQueue($priority);
+
+        return $this->queues[$priority]->push($this->encode($data));
     }
 
     /**
@@ -65,7 +73,27 @@ class ShmQueue extends BaseQueue
      */
     protected function doPop($priority = null, $block = false)
     {
-        // TODO: Implement doPop() method.
+        // 只想取出一个 $priority 队列的数据
+        if ($priority !== null && $this->isPriority($priority)) {
+            $this->createQueue($priority);
+            $data = $this->queues[$priority]->pop();
+
+            return $this->decode($data);
+        }
+
+        $data = null;
+
+        foreach ($this->queues as $queue) {
+            $this->createQueue($priority);
+
+            if (false !== ($data = $queue->pop())) {
+                $data = $this->decode($data);
+                break;
+            }
+        }
+
+        // reset($this->queues);
+        return $data;
     }
 
     /**
@@ -73,31 +101,13 @@ class ShmQueue extends BaseQueue
      */
     public function close()
     {
-        // 释放共享内存与信号量
-//        shm_remove($shareMemory);
-//        sem_remove($semaphore);
-    }
+        parent::close();
 
-    /**
-     * init the shared memory block
-     * @param int $priority
-     */
-    protected function initShmBlock($priority = self::PRIORITY_NORM)
-    {
-        /**
-         * resource shmop_open ( int $key , string $flags , int $mode , int $size )
-         * $flags:
-         *      a 访问只读内存段
-         *      c 创建一个新内存段，或者如果该内存段已存在，尝试打开它进行读写
-         *      w 可读写的内存段
-         *      n 创建一个新内存段，如果该内存段已存在，则会失败
-         * $mode: 八进制格式  0655
-         * $size: 开辟的数据大小 字节
-         */
-
-        if (!$this->queues[$priority]) {
-            $key = $this->getIntChannels()[$priority];
-            $this->queues[$priority] = shmop_open($key, 'c', 0644, $this->config['size']);
+        foreach ($this->queues as $key => $queue) {
+            if ($queue) {
+                $queue->close();
+                $this->queues[$key] = null;
+            }
         }
     }
 
@@ -107,13 +117,14 @@ class ShmQueue extends BaseQueue
     protected function createQueue($priority)
     {
         if (!$this->queues[$priority]) {
-            $key = $this->getIntChannels()[$priority];
-            $this->queues[$priority] = msg_get_queue($key);
+            $config = $this->config;
+            $config['key'] = $this->intChannels[$priority];
+            $this->queues[$priority] = new ShmMap($config);
         }
     }
 
     /**
-     * @return \SplFixedArray
+     * @return ShmMap[]
      */
     public function getQueues()
     {
@@ -122,7 +133,7 @@ class ShmQueue extends BaseQueue
 
     /**
      * @param int $priority
-     * @return \SplQueue|false
+     * @return ShmMap|false
      */
     public function getQueue($priority = self::PRIORITY_NORM)
     {
