@@ -66,7 +66,7 @@ class DbQueue extends BaseQueue
     protected function doPush($data, $priority = self::PRIORITY_NORM)
     {
         return $this->db->exec(sprintf(
-            "INSERT INTO %s (`queue`, `data`, `priority`, `created_at`) VALUES (%s, %s, %d, %d)",
+            'INSERT INTO %s (`queue`, `data`, `priority`, `created_at`) VALUES (%s, %s, %d, %d)',
             $this->tableName,
             $this->id,
             $this->encode($data),
@@ -78,13 +78,17 @@ class DbQueue extends BaseQueue
     /**
      * {@inheritDoc}
      */
-    protected function doPop()
+    protected function doPop($priority = null, $block = false)
     {
-        $st = $this->db->query(sprintf(
-            "SELECT `id`,`data` FROM %s WHERE queue = %s ORDER BY `priority` DESC, `id` ASC LIMIT 1",
-            $this->tableName,
-            $this->id
-        ));
+        if (!$this->isPriority($priority)) {
+            $sql = 'SELECT `id`,`data` FROM %s WHERE queue = %s ORDER BY `priority` DESC, `id` ASC LIMIT 1';
+            $sql = sprintf($sql, $this->tableName, $this->id);
+        } else {
+            $sql = 'SELECT `id`,`data` FROM %s WHERE queue = %s AND `priority` = %d DESC, `id` ASC LIMIT 1';
+            $sql = sprintf($sql, $this->tableName, $this->id, $priority);
+        }
+
+        $st = $this->db->query($sql);
 
         if ($row = $st->fetch(\PDO::FETCH_ASSOC)) {
             $row['data'] = $this->decode($row['data']);
@@ -96,7 +100,7 @@ class DbQueue extends BaseQueue
     /**
      * {@inheritDoc}
      */
-    protected function close()
+    public function close()
     {
         parent::close();
 

@@ -88,7 +88,7 @@ abstract class BaseQueue implements QueueInterface
     /**
      * {@inheritDoc}
      */
-    public function push($data, $priority = self::PRIORITY_NORM)
+    public function push($data, $priority = self::PRIORITY_NORM): bool
     {
         $status = false;
         $this->fire(self::EVENT_BEFORE_PUSH, [$data, $priority]);
@@ -96,11 +96,15 @@ abstract class BaseQueue implements QueueInterface
         try {
             $status = $this->doPush($data, $priority);
         } catch (\Exception $e) {
-            $this->errCode = $e->getCode() > 0 ? $e->getCode() : __LINE__;
+            $this->errCode = $e->getCode() !== 0 ? $e->getCode() : __LINE__;
             $this->errMsg = $e->getMessage();
+
+            $this->fire(self::EVENT_ERROR_PUSH, [$e, $this]);
         }
 
-        $this->fire(self::EVENT_AFTER_PUSH, [$data, $priority, $status]);
+        if (0 === $this->errCode) {
+            $this->fire(self::EVENT_AFTER_PUSH, [$data, $priority, $status]);
+        }
 
         return $status;
     }
@@ -118,16 +122,20 @@ abstract class BaseQueue implements QueueInterface
     public function pop($priority = null, $block = false)
     {
         $data = null;
-        $this->fire(self::EVENT_BEFORE_POP, [$this]);
+        $this->fire(self::EVENT_BEFORE_POP, [$priority, $this]);
 
         try {
             $data = $this->doPop($priority, $block);
         } catch (\Exception $e) {
-            $this->errCode = $e->getCode() > 0 ? $e->getCode() : __LINE__;
+            $this->errCode = $e->getCode() !== 0 ? $e->getCode() : __LINE__;
             $this->errMsg = $e->getMessage();
+
+            $this->fire(self::EVENT_ERROR_POP, [$e, $priority, $this]);
         }
 
-        $this->fire(self::EVENT_AFTER_POP, [$data, $this]);
+        if (0 === $this->errCode) {
+            $this->fire(self::EVENT_AFTER_POP, [$data, $priority, $this]);
+        }
 
         return $data;
     }
@@ -175,7 +183,7 @@ abstract class BaseQueue implements QueueInterface
 
     /**
      * @param $name
-     * @return null
+     * @return null|mixed
      */
     public function off($name)
     {
@@ -197,7 +205,7 @@ abstract class BaseQueue implements QueueInterface
      * get Priorities
      * @return array
      */
-    public function getPriorities()
+    public function getPriorities(): array
     {
         return [
             self::PRIORITY_HIGH,
@@ -212,6 +220,10 @@ abstract class BaseQueue implements QueueInterface
      */
     public function isPriority($priority)
     {
+        if (null === $priority) {
+            return false;
+        }
+
         return in_array((int)$priority, $this->getPriorities(), true);
     }
 
@@ -271,7 +283,7 @@ abstract class BaseQueue implements QueueInterface
             return $data;
         }
 
-        return unserialize($data);
+        return unserialize($data, null);
     }
 
     /**
@@ -316,7 +328,7 @@ abstract class BaseQueue implements QueueInterface
     /**
      * @return int
      */
-    public function getErrCode()
+    public function getErrCode(): int
     {
         return $this->errCode;
     }
@@ -324,7 +336,7 @@ abstract class BaseQueue implements QueueInterface
     /**
      * @return string
      */
-    public function getErrMsg()
+    public function getErrMsg(): string
     {
         return $this->errMsg;
     }

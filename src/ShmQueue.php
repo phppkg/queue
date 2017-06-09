@@ -74,7 +74,7 @@ class ShmQueue extends BaseQueue
     protected function doPop($priority = null, $block = false)
     {
         // 只想取出一个 $priority 队列的数据
-        if ($priority !== null && $this->isPriority($priority)) {
+        if ($this->isPriority($priority)) {
             $this->createQueue($priority);
             $data = $this->queues[$priority]->pop();
 

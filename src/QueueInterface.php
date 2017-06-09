@@ -29,9 +29,11 @@ interface QueueInterface
      */
     const EVENT_BEFORE_PUSH = 'beforePush';
     const EVENT_AFTER_PUSH = 'afterPush';
+    const EVENT_ERROR_PUSH = 'errorPush';
 
     const EVENT_BEFORE_POP = 'beforePop';
     const EVENT_AFTER_POP = 'afterPop';
+    const EVENT_ERROR_POP = 'errorPop';
 
     /**
      * push data
@@ -39,7 +41,7 @@ interface QueueInterface
      * @param int $priority
      * @return bool
      */
-    public function push($data, $priority = self::PRIORITY_NORM);
+    public function push($data, $priority = self::PRIORITY_NORM): bool;
 
     /**
      * pop data
@@ -57,15 +59,15 @@ interface QueueInterface
     /**
      * @return string
      */
-    public function getDriver();
+    public function getDriver(): string;
 
     /**
      * @return int
      */
-    public function getErrCode();
+    public function getErrCode(): int;
 
     /**
-     * @return int
+     * @return string
      */
-    public function getErrMsg();
+    public function getErrMsg(): string;
 }

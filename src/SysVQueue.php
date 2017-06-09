@@ -110,7 +110,7 @@ class SysVQueue extends BaseQueue
         //  )
 
         // 只想取出一个 $priority 队列的数据
-        if ($priority !== null && $this->isPriority($priority)) {
+        if ($this->isPriority($priority)) {
             // $priority 级别的队列还未初始化。create queue if it not exists.
             $this->createQueue($priority);
             $flags = $block ? 0 : (MSG_IPC_NOWAIT | MSG_NOERROR);

@@ -61,7 +61,7 @@ class RedisQueue extends BaseQueue
     protected function doPop($priority = null, $block = false)
     {
         // 只想取出一个 $priority 队列的数据
-        if ($priority !== null && $this->isPriority($priority)) {
+        if ($this->isPriority($priority)) {
             $channel = $this->channels[$priority];
 
             return $block ? $this->redis->brPop([$channel], 3) : $this->redis->rPop($channel);
