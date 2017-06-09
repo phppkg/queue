@@ -8,12 +8,18 @@
 
 namespace inhere\queue;
 
+use inhere\library\traits\LiteConfigTrait;
+use inhere\library\traits\LiteEventTrait;
+
 /**
  * Class BaseQueue
  * @package inhere\queue
  */
 abstract class BaseQueue implements QueueInterface
 {
+    use LiteConfigTrait;
+    use LiteEventTrait;
+
     /**
      * @var string
      */
@@ -41,12 +47,13 @@ abstract class BaseQueue implements QueueInterface
     protected $config = [
         'id' => null,
         'serialize' => true,
+        'pushFailHandle' => false,
     ];
 
     /**
-     * @var array
+     * @var callable
      */
-    private $_events = [];
+    private $pushFailHandler;
 
     /**
      * @var array
@@ -99,7 +106,7 @@ abstract class BaseQueue implements QueueInterface
             $this->errCode = $e->getCode() !== 0 ? $e->getCode() : __LINE__;
             $this->errMsg = $e->getMessage();
 
-            $this->fire(self::EVENT_ERROR_PUSH, [$e, $this]);
+            $this->fire(self::EVENT_ERROR_PUSH, [$e, $data, $priority, $this]);
         }
 
         if (0 === $this->errCode) {
@@ -146,56 +153,6 @@ abstract class BaseQueue implements QueueInterface
      * @return mixed
      */
     abstract protected function doPop($priority = null, $block = false);
-
-//////////////////////////////////////////////////////////////////////
-/// events method
-//////////////////////////////////////////////////////////////////////
-
-    /**
-     * register a event callback
-     * @param string $name event name
-     * @param callable $cb event callback
-     * @param bool $replace replace exists's event cb
-     * @return $this
-     */
-    public function on($name, callable $cb, $replace = false)
-    {
-        if ($replace || !isset($this->_events[$name])) {
-            $this->_events[$name] = $cb;
-        }
-
-        return $this;
-    }
-
-    /**
-     * @param string $name
-     * @param array $args
-     * @return mixed
-     */
-    protected function fire($name, array $args = [])
-    {
-        if (!isset($this->_events[$name]) || !($cb = $this->_events[$name])) {
-            return null;
-        }
-
-        return call_user_func_array($cb, $args);
-    }
-
-    /**
-     * @param $name
-     * @return null|mixed
-     */
-    public function off($name)
-    {
-        $cb = null;
-
-        if (isset($this->_events[$name])) {
-            $cb = $this->_events[$name];
-            unset($this->_events[$name]);
-        }
-
-        return $cb;
-    }
 
 //////////////////////////////////////////////////////////////////////
 /// helper method
@@ -287,6 +244,14 @@ abstract class BaseQueue implements QueueInterface
     }
 
     /**
+     * close
+     */
+    public function close()
+    {
+        $this->_events = [];
+    }
+
+    /**
      * __destruct
      */
     public function __destruct()
@@ -294,16 +259,25 @@ abstract class BaseQueue implements QueueInterface
         $this->close();
     }
 
+
 //////////////////////////////////////////////////////////////////////
 /// getter/setter method
 //////////////////////////////////////////////////////////////////////
 
     /**
-     * close
+     * @return callable
      */
-    public function close()
+    public function getPushFailHandler(): callable
     {
-        $this->_events = [];
+        return $this->pushFailHandler;
+    }
+
+    /**
+     * @param callable $pushFailHandler
+     */
+    public function setPushFailHandler(callable $pushFailHandler)
+    {
+        $this->pushFailHandler = $pushFailHandler;
     }
 
     /**
@@ -347,21 +321,5 @@ abstract class BaseQueue implements QueueInterface
     public function getDriver(): string
     {
         return $this->driver;
-    }
-
-    /**
-     * @return array
-     */
-    public function getConfig()
-    {
-        return $this->config;
-    }
-
-    /**
-     * @param array $config
-     */
-    public function setConfig(array $config)
-    {
-        $this->config = array_merge($this->config, $config);
     }
 }

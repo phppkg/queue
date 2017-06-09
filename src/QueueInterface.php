@@ -57,6 +57,16 @@ interface QueueInterface
     public function getId();
 
     /**
+     * @return array
+     */
+    public function getChannels();
+
+    /**
+     * @return array
+     */
+    public function getIntChannels();
+
+    /**
      * @return string
      */
     public function getDriver(): string;

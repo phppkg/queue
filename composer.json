@@ -14,7 +14,8 @@
   ],
   "require": {
     "php": ">=7.0.0",
-    "inhere/shm": "dev-master"
+    "inhere/shm": "dev-master",
+    "inhere/library": "dev-master"
   },
   "autoload": {
     "psr-4": {

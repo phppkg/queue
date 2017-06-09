@@ -28,6 +28,7 @@ class ShmQueue extends BaseQueue
     protected $config = [
         'key' => null,
         'serialize' => true,
+        'pushFailHandle' => false,
 
         'size' => 256000,
         'project' => 'php_shm', // shared memory, semaphore

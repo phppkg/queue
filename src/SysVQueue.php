@@ -31,16 +31,19 @@ class SysVQueue extends BaseQueue
      */
     protected $config = [
         'id' => 0, // int
+        'serialize' => true, // if set False, cannot direct save array|object
+        'pushFailHandle' => false,
+
         'uniKey' => 0, // int|string
         'msgType' => 1,
         'blocking' => 1, // 0|1
-        'serialize' => true, // if set False, cannot direct save array|object
         'bufferSize' => 2048, // 8192 65525
         'removeOnClose' => true, // Whether remove message queue on close.
     ];
 
     /**
      * {@inheritDoc}
+     * @throws \RuntimeException
      */
     protected function init()
     {
@@ -140,8 +143,8 @@ class SysVQueue extends BaseQueue
 
         $data = null;
 
-        foreach ($this->queues as $priority => $queue) {
-            if (($data = $this->doPop($priority, false)) !== null) {
+        foreach ($this->queues as $pri => $queue) {
+            if (($data = $this->doPop($pri, false)) !== null) {
                 $data = $this->decode($data);
                 break;
             }

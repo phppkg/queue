@@ -35,6 +35,8 @@ class DbQueue extends BaseQueue
     protected $config = [
         'id' => null,
         'serialize' => true,
+        'pushFailHandle' => false,
+
         'tableName' => '',
     ];
 
