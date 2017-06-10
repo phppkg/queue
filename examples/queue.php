@@ -9,7 +9,7 @@
 
 use inhere\queue\QueueInterface;
 
-require __DIR__ . '/s-autoload.php';
+require dirname(__DIR__) . '/../../autoload.php';
 
 $q = \inhere\queue\QueueFactory::make([
     'driver' => 'sysv',

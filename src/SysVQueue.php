@@ -17,29 +17,36 @@ class SysVQueue extends BaseQueue
     protected $driver = QueueFactory::DRIVER_SYSV;
 
     /**
-     * @var int
-     */
-    private $msgType = 1;
-
-    /**
      * @var \SplFixedArray
      */
     private $queues = [];
 
     /**
-     * @var array
+     * @var int
      */
-    protected $config = [
-        'id' => 0, // int
-        'serialize' => true, // if set False, cannot direct save array|object
-        'pushFailHandle' => false,
+    private $msgType = 1;
 
-        'uniKey' => 0, // int|string
-        'msgType' => 1,
-        'blocking' => 1, // 0|1
-        'bufferSize' => 2048, // 8192 65525
-        'removeOnClose' => true, // Whether remove message queue on close.
-    ];
+    /**
+     * project ID of the sys v msg
+     * @var int|string
+     */
+    private $project = 0;
+
+    /**
+     * @var bool
+     */
+    private $blocking = true;
+
+    /**
+     * buffer Size 8192 65525
+     * @var int
+     */
+    private $bufferSize = 2048;
+
+    /**
+     * @var bool
+     */
+    private $removeOnClose = true;
 
     /**
      * {@inheritDoc}
@@ -57,18 +64,9 @@ class SysVQueue extends BaseQueue
 
         parent::init();
 
-        $this->config['id'] = (int)$this->config['id'];
-        $this->config['bufferSize'] = (int)$this->config['bufferSize'];
-        $this->config['blocking'] = (bool)$this->config['blocking'];
-        $this->config['removeOnClose'] = (bool)$this->config['removeOnClose'];
-
-        if ($this->config['id'] > 0) {
-            $this->id = $this->config['id'];
-        } else {
-            $this->id = $this->config['id'] = ftok(__FILE__, $this->config['uniKey']);
+        if ($this->id <= 0) {
+            $this->id = ftok(__FILE__, $this->project);
         }
-
-        $this->msgType = (int)$this->config['msgType'];
 
         // 初始化队列列表. 使用时再初始化需要的队列
         $this->queues = new \SplFixedArray(count($this->getPriorities()));
@@ -97,7 +95,7 @@ class SysVQueue extends BaseQueue
             $this->msgType,
             $this->encode($data),
             false,
-            $this->config['blocking'],
+            $this->blocking,
             $this->errCode
         );
     }
@@ -122,7 +120,7 @@ class SysVQueue extends BaseQueue
                 $this->queues[$priority],
                 0,  // 0 $this->msgType,
                 $this->msgType,   // $this->msgType,
-                $this->config['bufferSize'],
+                $this->bufferSize,
                 $data,
                 false,
 
@@ -144,8 +142,7 @@ class SysVQueue extends BaseQueue
         $data = null;
 
         foreach ($this->queues as $pri => $queue) {
-            if (($data = $this->doPop($pri, false)) !== null) {
-                $data = $this->decode($data);
+            if (($data = $this->doPop($pri)) !== null) {
                 break;
             }
         }
@@ -225,7 +222,7 @@ class SysVQueue extends BaseQueue
 
         foreach ($this->queues as $key => $queue) {
             if ($queue) {
-                if ($this->config['removeOnClose']) {
+                if ($this->removeOnClose) {
                     msg_remove_queue($queue);
                 }
 
@@ -255,6 +252,101 @@ class SysVQueue extends BaseQueue
     public function getStat($queue = self::PRIORITY_NORM)
     {
         return msg_stat_queue($this->queues[$queue]);
+    }
+
+//////////////////////////////////////////////////////////////////////
+/// getter/setter method
+//////////////////////////////////////////////////////////////////////
+
+    /**
+     * @param int $id
+     * @return $this
+     */
+    public function setId($id)
+    {
+        $this->id = (int)$id;
+
+        return $this;
+    }
+
+    /**
+     * @return int
+     */
+    public function getMsgType(): int
+    {
+        return $this->msgType;
+    }
+
+    /**
+     * @param int $msgType
+     */
+    public function setMsgType(int $msgType)
+    {
+        $this->msgType = $msgType;
+    }
+
+    /**
+     * @return int|string
+     */
+    public function getProject()
+    {
+        return $this->project;
+    }
+
+    /**
+     * @param int|string $project
+     */
+    public function setProject($project)
+    {
+        $this->project = $project;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isBlocking(): bool
+    {
+        return $this->blocking;
+    }
+
+    /**
+     * @param bool $blocking
+     */
+    public function setBlocking($blocking = true)
+    {
+        $this->blocking = (bool)$blocking;
+    }
+
+    /**
+     * @return int
+     */
+    public function getBufferSize(): int
+    {
+        return $this->bufferSize;
+    }
+
+    /**
+     * @param int $bufferSize
+     */
+    public function setBufferSize(int $bufferSize)
+    {
+        $this->bufferSize = $bufferSize;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isRemoveOnClose(): bool
+    {
+        return $this->removeOnClose;
+    }
+
+    /**
+     * @param bool $removeOnClose
+     */
+    public function setRemoveOnClose($removeOnClose = true)
+    {
+        $this->removeOnClose = (bool)$removeOnClose;
     }
 
 }

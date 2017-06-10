@@ -25,19 +25,8 @@ class RedisQueue extends BaseQueue
      */
     private $redis;
 
-    /**
-     * RedisQueue constructor.
-     * @param array $config
-     */
-    public function __construct(array $config = [])
+    protected function init()
     {
-        if (isset($config['redis'])) {
-            $this->setRedis($config['redis']);
-            unset($config['redis']);
-        }
-
-        parent::__construct($config);
-
         if (!$this->id) {
             $this->id = $this->driver;
         }

@@ -18,18 +18,20 @@ use inhere\shm\ShmMap;
 class ShmQueue extends BaseQueue
 {
     /**
+     * @var string
+     */
+    protected $driver = QueueFactory::DRIVER_SHM;
+
+    /**
      * @var ShmMap[]
      */
     private $queues = [];
 
     /**
+     * shm options
      * @var array
      */
-    protected $config = [
-        'key' => null,
-        'serialize' => true,
-        'pushFailHandle' => false,
-
+    private $options = [
         'size' => 256000,
         'project' => 'php_shm', // shared memory, semaphore
         'tmpDir' => '/tmp', // tmp path
@@ -42,11 +44,9 @@ class ShmQueue extends BaseQueue
     {
         parent::init();
 
-        if ($this->config['key'] > 0) {
-            $this->id = (int)$this->config['key'];
-        } else {
+        if ($this->id <= 0) {
             // 定义共享内存,信号量key
-            $this->id = $this->config['key'] = PhpHelper::ftok(__FILE__, $this->config['project']);
+            $this->id = PhpHelper::ftok(__FILE__, $this->options['project']);
         }
 
         // create queues
@@ -118,7 +118,7 @@ class ShmQueue extends BaseQueue
     protected function createQueue($priority)
     {
         if (!$this->queues[$priority]) {
-            $config = $this->config;
+            $config = $this->getOptions();
             $config['key'] = $this->intChannels[$priority];
             $this->queues[$priority] = new ShmMap($config);
         }
@@ -145,4 +145,19 @@ class ShmQueue extends BaseQueue
         return $this->queues[$priority];
     }
 
+    /**
+     * @return array
+     */
+    public function getOptions(): array
+    {
+        return $this->options;
+    }
+
+    /**
+     * @param array $options
+     */
+    public function setOptions(array $options)
+    {
+        $this->options = array_merge($this->options, $options);
+    }
 }

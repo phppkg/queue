@@ -16,9 +16,9 @@ final class QueueFactory
 {
     const DRIVER_DB = 'db';
     const DRIVER_PHP = 'php';
-    const DRIVER_LDB = 'levelDb';
-    const DRIVER_RDB = 'rocksDb';
-    const DRIVER_SSDB = 'ssdb';
+    // const DRIVER_LDB = 'levelDb';
+    // const DRIVER_RDB = 'rocksDb';
+    const DRIVER_SHM = 'shm';
     const DRIVER_SYSV = 'sysv';
     const DRIVER_REDIS = 'redis';
 
@@ -30,6 +30,7 @@ final class QueueFactory
         'db' => DbQueue::class,
         'php' => PhpQueue::class,
         'sysv' => SysVQueue::class,
+        'shm' => ShmQueue::class,
         'redis' => RedisQueue::class,
     ];
 

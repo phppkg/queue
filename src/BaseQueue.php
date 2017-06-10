@@ -8,16 +8,15 @@
 
 namespace inhere\queue;
 
-use inhere\library\traits\LiteConfigTrait;
+use inhere\library\StdObject;
 use inhere\library\traits\LiteEventTrait;
 
 /**
  * Class BaseQueue
  * @package inhere\queue
  */
-abstract class BaseQueue implements QueueInterface
+abstract class BaseQueue extends StdObject implements QueueInterface
 {
-    use LiteConfigTrait;
     use LiteEventTrait;
 
     /**
@@ -42,13 +41,27 @@ abstract class BaseQueue implements QueueInterface
     protected $errMsg;
 
     /**
-     * @var array
+     * whether serialize data
+     * @var bool
      */
-    protected $config = [
-        'id' => null,
-        'serialize' => true,
-        'pushFailHandle' => false,
-    ];
+    protected $serialize = true;
+
+    /**
+     * data serializer like 'serialize' 'json_encode'
+     * @var callable
+     */
+    protected $serializer = 'json_encode';
+
+    /**
+     * data deserializer like 'unserialize' 'json_decode'
+     * @var callable
+     */
+    protected $deserializer = 'json_decode';
+
+    /**
+     * @var bool
+     */
+    private $enableFailHandle = false;
 
     /**
      * @var callable
@@ -71,25 +84,11 @@ abstract class BaseQueue implements QueueInterface
      */
     public function __construct(array $config = [])
     {
-        $this->setConfig($config);
-
-        $this->init();
+        parent::__construct($config);
 
         // init property
         $this->getChannels();
         $this->getIntChannels();
-    }
-
-    /**
-     * init
-     */
-    protected function init()
-    {
-        $this->config['serialize'] = (bool)$this->config['serialize'];
-
-        if (isset($this->config['id'])) {
-            $this->id = $this->config['id'];
-        }
     }
 
     /**
@@ -223,11 +222,12 @@ abstract class BaseQueue implements QueueInterface
      */
     protected function encode($data)
     {
-        if (!$this->config['serialize']) {
+        if (!$this->serialize || !($cb = $this->serializer)) {
             return $data;
         }
 
-        return serialize($data);
+        // return base64_encode(serialize($data));
+        return $cb($data);
     }
 
     /**
@@ -236,11 +236,11 @@ abstract class BaseQueue implements QueueInterface
      */
     protected function decode($data)
     {
-        if (!$this->config['serialize']) {
+        if (!$this->serialize || !($cb = $this->deserializer)) {
             return $data;
         }
 
-        return unserialize($data, null);
+        return $cb($data);
     }
 
     /**
@@ -265,6 +265,89 @@ abstract class BaseQueue implements QueueInterface
 //////////////////////////////////////////////////////////////////////
 
     /**
+     * @return int
+     */
+    public function getId()
+    {
+        return $this->id;
+    }
+
+    /**
+     * @param int|string $id
+     * @return $this
+     */
+    public function setId($id)
+    {
+        $this->id = $id;
+
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isSerialize(): bool
+    {
+        return $this->serialize;
+    }
+
+    /**
+     * @param bool $serialize
+     */
+    public function setSerialize($serialize = true)
+    {
+        $this->serialize = (bool)$serialize;
+    }
+
+    /**
+     * @return callable
+     */
+    public function getSerializer(): callable
+    {
+        return $this->serializer;
+    }
+
+    /**
+     * @param callable $serializer
+     */
+    public function setSerializer(callable $serializer)
+    {
+        $this->serializer = $serializer;
+    }
+
+    /**
+     * @return callable
+     */
+    public function getDeserializer(): callable
+    {
+        return $this->deserializer;
+    }
+
+    /**
+     * @param callable $deserializer
+     */
+    public function setDeserializer(callable $deserializer)
+    {
+        $this->deserializer = $deserializer;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isEnableFailHandle(): bool
+    {
+        return $this->enableFailHandle;
+    }
+
+    /**
+     * @param bool $enableFailHandle
+     */
+    public function setEnablePushFailHandle($enableFailHandle = true)
+    {
+        $this->enableFailHandle = (bool)$enableFailHandle;
+    }
+
+    /**
      * @return callable
      */
     public function getPushFailHandler(): callable
@@ -278,25 +361,6 @@ abstract class BaseQueue implements QueueInterface
     public function setPushFailHandler(callable $pushFailHandler)
     {
         $this->pushFailHandler = $pushFailHandler;
-    }
-
-    /**
-     * @return int
-     */
-    public function getId()
-    {
-        return $this->id;
-    }
-
-    /**
-     * @param string $id
-     * @return $this
-     */
-    public function setId($id)
-    {
-        $this->id = $id;
-
-        return $this;
     }
 
     /**

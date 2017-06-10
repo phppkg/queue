@@ -29,34 +29,8 @@ class DbQueue extends BaseQueue
      */
     private $tableName = 'msg_queue';
 
-    /**
-     * @var array
-     */
-    protected $config = [
-        'id' => null,
-        'serialize' => true,
-        'pushFailHandle' => false,
-
-        'tableName' => '',
-    ];
-
-    /**
-     * DbQueue constructor.
-     * @param array $config
-     */
-    public function __construct(array $config = [])
+    protected function init()
     {
-        if (isset($config['db'])) {
-            $this->setDb($config['db']);
-            unset($config['db']);
-        }
-
-        parent::__construct($config);
-
-        if (!empty($this->config['tableName'])) {
-            $this->setTableName($this->config['tableName']);
-        }
-
         if (!$this->id) {
             $this->id = $this->driver;
         }
