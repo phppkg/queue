@@ -17,7 +17,7 @@ class RedisQueue extends BaseQueue
     /**
      * @var string
      */
-    protected $driver = QueueFactory::DRIVER_REDIS;
+    protected $driver = Queue::DRIVER_REDIS;
 
     /**
      * redis
@@ -41,7 +41,7 @@ class RedisQueue extends BaseQueue
             $priority = self::PRIORITY_NORM;
         }
 
-        return $this->redis->lPush($this->channels[$priority], $this->encode($data));
+        return $this->redis->lPush($this->channels[$priority], $data);
     }
 
     /**
@@ -53,14 +53,14 @@ class RedisQueue extends BaseQueue
         if ($this->isPriority($priority)) {
             $channel = $this->channels[$priority];
 
-            return $block ? $this->redis->brPop([$channel], 3) : $this->redis->rPop($channel);
+            return $this->redis->rPop($channel);
+//            return $block ? $this->redis->brPop([$channel], 3) : $this->redis->rPop($channel);
         }
 
         $data = null;
 
         foreach ($this->channels as $channel) {
             if ($data = $this->redis->rPop($channel)) {
-                $data = $this->decode($data);
                 break;
             }
         }

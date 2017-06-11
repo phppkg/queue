@@ -17,7 +17,7 @@ class DbQueue extends BaseQueue
     /**
      * @var string
      */
-    protected $driver = QueueFactory::DRIVER_DB;
+    protected $driver = Queue::DRIVER_DB;
 
     /**
      * @var \PDO
@@ -45,7 +45,7 @@ class DbQueue extends BaseQueue
             'INSERT INTO %s (`queue`, `data`, `priority`, `created_at`) VALUES (%s, %s, %d, %d)',
             $this->tableName,
             $this->id,
-            $this->encode($data),
+            $data,
             $priority,
             time()
         ));
@@ -64,13 +64,14 @@ class DbQueue extends BaseQueue
             $sql = sprintf($sql, $this->tableName, $this->id, $priority);
         }
 
+        $data = null;
         $st = $this->db->query($sql);
 
         if ($row = $st->fetch(\PDO::FETCH_ASSOC)) {
-            $row['data'] = $this->decode($row['data']);
+            $data = $row['data'];
         }
 
-        return $row;
+        return $data;
     }
 
     /**

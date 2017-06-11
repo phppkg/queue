@@ -20,7 +20,7 @@ class ShmQueue extends BaseQueue
     /**
      * @var string
      */
-    protected $driver = QueueFactory::DRIVER_SHM;
+    protected $driver = Queue::DRIVER_SHM;
 
     /**
      * @var ShmMap[]
@@ -33,12 +33,13 @@ class ShmQueue extends BaseQueue
      */
     private $options = [
         'size' => 256000,
-        'project' => 'php_shm', // shared memory, semaphore
+        'project' => 's', // shared memory, semaphore NOTICE: Length can be only one
         'tmpDir' => '/tmp', // tmp path
     ];
 
     /**
      * {@inheritDoc}
+     * @throws \LogicException
      */
     protected function init()
     {
@@ -57,6 +58,7 @@ class ShmQueue extends BaseQueue
      * @param $data
      * @param int $priority
      * @return bool
+     * @throws \RuntimeException
      */
     protected function doPush($data, $priority = self::PRIORITY_NORM)
     {
@@ -64,31 +66,26 @@ class ShmQueue extends BaseQueue
             $priority = self::PRIORITY_NORM;
         }
 
-        $this->createQueue($priority);
-
-        return $this->queues[$priority]->push($this->encode($data));
+        return $this->createQueue($priority)->rPush($data);
     }
 
     /**
      * {@inheritDoc}
+     * @throws \RuntimeException
      */
     protected function doPop($priority = null, $block = false)
     {
         // 只想取出一个 $priority 队列的数据
         if ($this->isPriority($priority)) {
-            $this->createQueue($priority);
-            $data = $this->queues[$priority]->pop();
-
-            return $this->decode($data);
+            return $this->createQueue($priority)->lPop();
         }
 
         $data = null;
 
-        foreach ($this->queues as $queue) {
-            $this->createQueue($priority);
+        foreach ($this->queues as $pri => $queue) {
+            $queue = $queue ?: $this->createQueue($pri);
 
-            if (false !== ($data = $queue->pop())) {
-                $data = $this->decode($data);
+            if (false !== ($data = $queue->lPop())) {
                 break;
             }
         }
@@ -113,7 +110,10 @@ class ShmQueue extends BaseQueue
     }
 
     /**
+     * create queue if it not exists.
      * @param int $priority
+     * @return ShmMap
+     * @throws \RuntimeException
      */
     protected function createQueue($priority)
     {
@@ -122,6 +122,8 @@ class ShmQueue extends BaseQueue
             $config['key'] = $this->intChannels[$priority];
             $this->queues[$priority] = new ShmMap($config);
         }
+
+        return $this->queues[$priority];
     }
 
     /**

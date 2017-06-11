@@ -9,10 +9,10 @@
 namespace inhere\queue;
 
 /**
- * Class QueueFactory
+ * Class Queue - queue factory
  * @package inhere\queue
  */
-final class QueueFactory
+final class Queue
 {
     const DRIVER_DB = 'db';
     const DRIVER_PHP = 'php';

@@ -100,7 +100,7 @@ abstract class BaseQueue extends StdObject implements QueueInterface
         $this->fire(self::EVENT_BEFORE_PUSH, [$data, $priority]);
 
         try {
-            $status = $this->doPush($data, $priority);
+            $status = $this->doPush($this->encode($data), $priority);
         } catch (\Exception $e) {
             $this->errCode = $e->getCode() !== 0 ? $e->getCode() : __LINE__;
             $this->errMsg = $e->getMessage();
@@ -116,7 +116,7 @@ abstract class BaseQueue extends StdObject implements QueueInterface
     }
 
     /**
-     * @param $data
+     * @param string $data Encoded data string
      * @param int $priority
      * @return bool
      */
@@ -131,7 +131,9 @@ abstract class BaseQueue extends StdObject implements QueueInterface
         $this->fire(self::EVENT_BEFORE_POP, [$priority, $this]);
 
         try {
-            $data = $this->doPop($priority, $block);
+            if ($data = $this->doPop($priority, $block)) {
+                $data = $this->decode($data);
+            }
         } catch (\Exception $e) {
             $this->errCode = $e->getCode() !== 0 ? $e->getCode() : __LINE__;
             $this->errMsg = $e->getMessage();
@@ -149,7 +151,7 @@ abstract class BaseQueue extends StdObject implements QueueInterface
     /**
      * @param null $priority
      * @param bool $block
-     * @return mixed
+     * @return string Raw data string
      */
     abstract protected function doPop($priority = null, $block = false);
 

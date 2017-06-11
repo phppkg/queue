@@ -17,10 +17,10 @@ class PhpQueue extends BaseQueue
     /**
      * @var string
      */
-    protected $driver = QueueFactory::DRIVER_PHP;
+    protected $driver = Queue::DRIVER_PHP;
 
     /**
-     * @var \SplFixedArray
+     * @var \SplQueue[]
      */
     private $queues = [];
 
@@ -48,9 +48,9 @@ class PhpQueue extends BaseQueue
             $priority = self::PRIORITY_NORM;
         }
 
-        $this->createQueue($priority);
+        $this->createQueue($priority)->enqueue($data); // can use push().
 
-        return $this->queues[$priority]->enqueue($this->encode($data)); // can use push().
+        return true;
     }
 
     /**
@@ -60,21 +60,19 @@ class PhpQueue extends BaseQueue
     {
         // 只想取出一个 $priority 队列的数据
         if ($this->isPriority($priority)) {
-            $this->createQueue($priority);
-            $data = $this->queues[$priority]->dequeue();
+            $queue = $this->createQueue($priority);
 
-            return $this->decode($data);
+            return $queue->isEmpty() ? null : $queue->dequeue();
         }
 
         $data = null;
 
-        foreach ($this->queues as $queue) {
-            $this->createQueue($priority);
+        foreach ($this->queues as $pri => $queue) {
+            $queue = $queue ?: $this->createQueue($pri);
 
             // valid()
             if (!$queue->isEmpty()) {
-                // can use shift().
-                $data = $this->decode($queue->dequeue());
+                $data = $queue->dequeue();// can use shift().
                 break;
             }
         }
@@ -84,7 +82,9 @@ class PhpQueue extends BaseQueue
     }
 
     /**
+     * create queue if it not exists.
      * @param int $priority
+     * @return \SplQueue
      */
     protected function createQueue($priority)
     {
@@ -92,10 +92,12 @@ class PhpQueue extends BaseQueue
             $this->queues[$priority] = new \SplQueue();
             $this->queues[$priority]->setIteratorMode(\SplQueue::IT_MODE_DELETE);
         }
+
+        return $this->queues[$priority];
     }
 
     /**
-     * @return \SplFixedArray
+     * @return \SplQueue[]
      */
     public function getQueues()
     {

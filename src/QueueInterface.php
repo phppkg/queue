@@ -11,6 +11,8 @@ namespace inhere\queue;
 /**
  * Interface QueueInterface
  * @package inhere\queue
+ *
+ * @property string $driver
  */
 interface QueueInterface
 {

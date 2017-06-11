@@ -14,7 +14,7 @@ class SysVQueue extends BaseQueue
     /**
      * @var string
      */
-    protected $driver = QueueFactory::DRIVER_SYSV;
+    protected $driver = Queue::DRIVER_SYSV;
 
     /**
      * @var \SplFixedArray
@@ -27,7 +27,8 @@ class SysVQueue extends BaseQueue
     private $msgType = 1;
 
     /**
-     * project ID of the sys v msg
+     * project ID of the sys v msg.
+     * NOTICE: Length can be only one
      * @var int|string
      */
     private $project = 0;
@@ -88,12 +89,10 @@ class SysVQueue extends BaseQueue
         }
 
         // create queue if it not exists.
-        $this->createQueue($priority);
-
         return msg_send(
-            $this->queues[$priority],
+            $this->createQueue($priority),
             $this->msgType,
-            $this->encode($data),
+            $data,
             false,
             $this->blocking,
             $this->errCode
@@ -113,11 +112,11 @@ class SysVQueue extends BaseQueue
         // 只想取出一个 $priority 队列的数据
         if ($this->isPriority($priority)) {
             // $priority 级别的队列还未初始化。create queue if it not exists.
-            $this->createQueue($priority);
+            $queue = $this->createQueue($priority);
             $flags = $block ? 0 : (MSG_IPC_NOWAIT | MSG_NOERROR);
 
             $success = msg_receive(
-                $this->queues[$priority],
+                $queue,
                 0,  // 0 $this->msgType,
                 $this->msgType,   // $this->msgType,
                 $this->bufferSize,
@@ -133,7 +132,7 @@ class SysVQueue extends BaseQueue
             );
 
             if ($success) {
-                return $this->decode($data);
+                return $data;
             }
 
             return null;
@@ -151,7 +150,9 @@ class SysVQueue extends BaseQueue
     }
 
     /**
+     * create queue if it not exists.
      * @param int $priority
+     * @return resource
      */
     protected function createQueue($priority)
     {
@@ -159,6 +160,8 @@ class SysVQueue extends BaseQueue
             $key = $this->getIntChannels()[$priority];
             $this->queues[$priority] = msg_get_queue($key);
         }
+
+        return $this->queues[$priority];
     }
 
     /**
