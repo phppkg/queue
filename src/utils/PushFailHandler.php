@@ -33,6 +33,7 @@ class PushFailHandler
         file_put_contents($this->getFile(), json_encode([
             'time' => time(),
             'priority' => $priority,
+            'driver' => $queue->getDriver(),
             'id' => $queue->getId(),
             'intId' => $queue->getChannels()[$priority],
             'strId' => $queue->getIntChannels()[$priority],
