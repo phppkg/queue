@@ -66,8 +66,9 @@ string(2) "n1"
 string(2) "n2"
 array(1) {
   [0] =>
-  string(11) "array-value"
+  string(11) "n3-array-value"
 }
+string(2) "n2"
 string(2) "l1"
 ```
 
