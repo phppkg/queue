@@ -250,7 +250,7 @@ abstract class BaseQueue extends StdObject implements QueueInterface
      */
     public function close()
     {
-        $this->_events = [];
+        $this->clearEvents();
     }
 
     /**
