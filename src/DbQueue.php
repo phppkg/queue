@@ -15,11 +15,6 @@ namespace inhere\queue;
 class DbQueue extends BaseQueue
 {
     /**
-     * @var string
-     */
-    protected $driver = Queue::DRIVER_DB;
-
-    /**
      * @var \PDO
      */
     private $db;
@@ -27,10 +22,12 @@ class DbQueue extends BaseQueue
     /**
      * @var string
      */
-    private $tableName = 'msg_queue';
+    private $table = 'msg_queue';
 
     protected function init()
     {
+        $this->driver = Queue::DRIVER_DB;
+
         if (!$this->id) {
             $this->id = $this->driver;
         }
@@ -42,8 +39,7 @@ class DbQueue extends BaseQueue
     protected function doPush($data, $priority = self::PRIORITY_NORM)
     {
         return $this->db->exec(sprintf(
-            'INSERT INTO %s (`queue`, `data`, `priority`, `created_at`) VALUES (%s, %s, %d, %d)',
-            $this->tableName,
+            "INSERT INTO {$this->table} (`queue`, `data`, `priority`, `created_at`) VALUES (%s, %s, %d, %d)",
             $this->id,
             $data,
             $priority,
@@ -57,11 +53,11 @@ class DbQueue extends BaseQueue
     protected function doPop($priority = null, $block = false)
     {
         if (!$this->isPriority($priority)) {
-            $sql = 'SELECT `id`,`data` FROM %s WHERE queue = %s ORDER BY `priority` DESC, `id` ASC LIMIT 1';
-            $sql = sprintf($sql, $this->tableName, $this->id);
+            $sql = "SELECT `id`,`data` FROM {$this->table} WHERE queue = %s ORDER BY `priority` DESC, `id` ASC LIMIT 1";
+            $sql = sprintf($sql, $this->id);
         } else {
-            $sql = 'SELECT `id`,`data` FROM %s WHERE queue = %s AND `priority` = %d DESC, `id` ASC LIMIT 1';
-            $sql = sprintf($sql, $this->tableName, $this->id, $priority);
+            $sql = "SELECT `id`,`data` FROM {$this->table} WHERE queue = %s AND `priority` = %d DESC, `id` ASC LIMIT 1";
+            $sql = sprintf($sql, $this->id, $priority);
         }
 
         $data = null;
@@ -87,17 +83,17 @@ class DbQueue extends BaseQueue
     /**
      * @return string
      */
-    public function getTableName(): string
+    public function getTable(): string
     {
-        return $this->tableName;
+        return $this->table;
     }
 
     /**
-     * @param string $tableName
+     * @param string $table
      */
-    public function setTableName(string $tableName)
+    public function setTable(string $table)
     {
-        $this->tableName = $tableName;
+        $this->table = $table;
     }
 
     /**
@@ -134,7 +130,7 @@ class DbQueue extends BaseQueue
      */
     public function createMysqlTableSql()
     {
-        $tName = $this->tableName;
+        $tName = $this->table;
         return <<<EOF
 CREATE TABLE IF NOT EXISTS `$tName` (
 	`id` INT(11) NOT NULL AUTO_INCREMENT,
@@ -145,7 +141,7 @@ CREATE TABLE IF NOT EXISTS `$tName` (
 	`started_at` INT(10) UNSIGNED NOT NULL DEFAULT 0,
 	`finished_at` INT(10) UNSIGNED NOT NULL DEFAULT 0,
 	KEY (`queue`, `created_at`),
-	PRIMARY KEY (`iId`)
+	PRIMARY KEY (`id`)
 )
 COLLATE='utf8_general_ci'
 ENGINE=InnoDB
@@ -157,7 +153,7 @@ EOF;
      */
     public function createSqliteTableSql()
     {
-        $tName = $this->tableName;
+        $tName = $this->table;
         return <<<EOF
 CREATE TABLE IF NOT EXISTS `$tName` (
 	`id` INTEGER PRIMARY KEY NOT NULL,

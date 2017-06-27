@@ -12,11 +12,6 @@ namespace inhere\queue;
 class SysVQueue extends BaseQueue
 {
     /**
-     * @var string
-     */
-    protected $driver = Queue::DRIVER_SYSV;
-
-    /**
      * @var \SplFixedArray
      */
     private $queues = [];
@@ -64,6 +59,8 @@ class SysVQueue extends BaseQueue
         }
 
         parent::init();
+
+        $this->driver = Queue::DRIVER_SYSV;
 
         if ($this->id <= 0) {
             $this->id = ftok(__FILE__, $this->project);

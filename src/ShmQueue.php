@@ -18,11 +18,6 @@ use inhere\shm\ShmMap;
 class ShmQueue extends BaseQueue
 {
     /**
-     * @var string
-     */
-    protected $driver = Queue::DRIVER_SHM;
-
-    /**
      * @var ShmMap[]
      */
     private $queues = [];
@@ -44,6 +39,8 @@ class ShmQueue extends BaseQueue
     protected function init()
     {
         parent::init();
+
+        $this->driver = Queue::DRIVER_SHM;
 
         if ($this->id <= 0) {
             // 定义共享内存,信号量key

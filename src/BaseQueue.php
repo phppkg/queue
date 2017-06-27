@@ -101,15 +101,12 @@ abstract class BaseQueue extends StdObject implements QueueInterface
 
         try {
             $status = $this->doPush($this->encode($data), $priority);
+            $this->fire(self::EVENT_AFTER_PUSH, [$data, $priority, $status]);
         } catch (\Exception $e) {
             $this->errCode = $e->getCode() !== 0 ? $e->getCode() : __LINE__;
             $this->errMsg = $e->getMessage();
 
             $this->fire(self::EVENT_ERROR_PUSH, [$e, $data, $priority, $this]);
-        }
-
-        if (0 === $this->errCode) {
-            $this->fire(self::EVENT_AFTER_PUSH, [$data, $priority, $status]);
         }
 
         return $status;
@@ -134,15 +131,13 @@ abstract class BaseQueue extends StdObject implements QueueInterface
             if ($data = $this->doPop($priority, $block)) {
                 $data = $this->decode($data);
             }
+
+            $this->fire(self::EVENT_AFTER_POP, [$data, $priority, $this]);
         } catch (\Exception $e) {
             $this->errCode = $e->getCode() !== 0 ? $e->getCode() : __LINE__;
             $this->errMsg = $e->getMessage();
 
             $this->fire(self::EVENT_ERROR_POP, [$e, $priority, $this]);
-        }
-
-        if (0 === $this->errCode) {
-            $this->fire(self::EVENT_AFTER_POP, [$data, $priority, $this]);
         }
 
         return $data;

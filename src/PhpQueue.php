@@ -15,11 +15,6 @@ namespace inhere\queue;
 class PhpQueue extends BaseQueue
 {
     /**
-     * @var string
-     */
-    protected $driver = Queue::DRIVER_PHP;
-
-    /**
      * @var \SplQueue[]
      */
     private $queues = [];
@@ -30,6 +25,8 @@ class PhpQueue extends BaseQueue
     protected function init()
     {
         parent::init();
+
+        $this->driver = Queue::DRIVER_PHP;
 
         if (!$this->id) {
             $this->id = $this->driver;

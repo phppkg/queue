@@ -2,10 +2,10 @@
 
 php的队列使用包装, 默认自带支持 `高 high` `中 norm` `低 low` 三个级别的队列操作。
 
-- `DbQueue` 基于数据库的队列实现
+- `DbQueue` 基于数据库(mysql/sqlite)的队列实现
 - `PhpQueue` 基于 php `SplQueue` 实现
-- `RedisQueue` 基于 redis 实现
-- `ShmQueue` 基于共享内存实现
+- `RedisQueue` 基于 redis 实现 - 操作具有原子性,并发操作不会有问题
+- `ShmQueue` 基于共享内存实现  - 操作会自动加锁,并发操作不会有问题
 - `SysVQueue` 基于 *nix 系统的 system v message 实现. php 需启用 `--enable-sysvmsg` 通常是默认开启的 :) 
 
 ## 安装

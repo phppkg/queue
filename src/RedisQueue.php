@@ -10,15 +10,12 @@ namespace inhere\queue;
 
 /**
  * Class RedisQueue
+ * - 操作具有原子性。并发操作不会有问题
+ *
  * @package inhere\queue
  */
 class RedisQueue extends BaseQueue
 {
-    /**
-     * @var string
-     */
-    protected $driver = Queue::DRIVER_REDIS;
-
     /**
      * redis
      * @var \Redis
@@ -27,6 +24,8 @@ class RedisQueue extends BaseQueue
 
     protected function init()
     {
+        $this->driver = Queue::DRIVER_REDIS;
+
         if (!$this->id) {
             $this->id = $this->driver;
         }
