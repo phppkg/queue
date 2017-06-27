@@ -53,10 +53,10 @@ class DbQueue extends BaseQueue
     protected function doPop($priority = null, $block = false)
     {
         if (!$this->isPriority($priority)) {
-            $sql = "SELECT `id`,`data` FROM {$this->table} WHERE queue = %s ORDER BY `priority` DESC, `id` ASC LIMIT 1";
+            $sql = "SELECT `id`,`data` FROM {$this->table} WHERE queue = %s ORDER BY `priority` ASC, `id` DESC LIMIT 1";
             $sql = sprintf($sql, $this->id);
         } else {
-            $sql = "SELECT `id`,`data` FROM {$this->table} WHERE queue = %s AND `priority` = %d DESC, `id` ASC LIMIT 1";
+            $sql = "SELECT `id`,`data` FROM {$this->table} WHERE queue = %s AND `priority` = %d ORDER BY `priority` ASC, `id` DESC LIMIT 1";
             $sql = sprintf($sql, $this->id, $priority);
         }
 
@@ -68,6 +68,24 @@ class DbQueue extends BaseQueue
         }
 
         return $data;
+    }
+
+
+    /**
+     * @param int $priority
+     * @return int
+     */
+    public function count($priority = self::PRIORITY_NORM)
+    {
+        $count = 0;
+        $sql = sprintf("SELECT COUNT(*) AS `count` FROM {$this->table} WHERE `priority` = %d", $priority);
+        $st = $this->db->query($sql);
+
+        if ($row = $st->fetch(\PDO::FETCH_ASSOC)) {
+            $count = $row['count'];
+        }
+
+        return $count;
     }
 
     /**

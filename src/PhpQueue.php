@@ -78,6 +78,15 @@ class PhpQueue extends BaseQueue
         return $data;
     }
 
+    public function count($priority = self::PRIORITY_NORM)
+    {
+        if ($queue = $this->queues[$priority]) {
+            return $queue->count();
+        }
+
+        return 0;
+    }
+
     /**
      * create queue if it not exists.
      * @param int $priority

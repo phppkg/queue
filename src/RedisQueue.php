@@ -68,6 +68,17 @@ class RedisQueue extends BaseQueue
     }
 
     /**
+     * @param int $priority
+     * @return int
+     */
+    public function count($priority = self::PRIORITY_NORM)
+    {
+        $channel = $this->channels[$priority];
+
+        return $this->redis->lLen($channel);
+    }
+
+    /**
      * @return \Redis
      */
     public function getRedis(): \Redis

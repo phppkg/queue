@@ -91,6 +91,15 @@ class ShmQueue extends BaseQueue
         return $data;
     }
 
+    public function count($priority = self::PRIORITY_NORM)
+    {
+        if ($queue = $this->queues[$priority]) {
+            return $queue->count();
+        }
+
+        return 0;
+    }
+
     /**
      * {@inheritDoc}
      */

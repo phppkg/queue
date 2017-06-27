@@ -54,6 +54,12 @@ interface QueueInterface
     public function pop($priority = null, $block = false);
 
     /**
+     * @param int $priority
+     * @return int
+     */
+    public function count($priority = self::PRIORITY_NORM);
+
+    /**
      * @return string|int
      */
     public function getId();

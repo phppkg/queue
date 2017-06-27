@@ -11,10 +11,10 @@ namespace inhere\queue\utils;
 use inhere\queue\QueueInterface;
 
 /**
- * Class PushFailHandler
+ * Class EventHandler
  * @package inhere\queue\utils
  */
-class PushFailHandler
+class EventHandler
 {
     /**
      * @var string
@@ -28,7 +28,7 @@ class PushFailHandler
      * @param $priority
      * @param QueueInterface $queue
      */
-    public function __invoke($data, $priority, QueueInterface $queue)
+    public function onFail($data, $priority, QueueInterface $queue)
     {
         file_put_contents($this->getFile(), json_encode([
             'time' => time(),

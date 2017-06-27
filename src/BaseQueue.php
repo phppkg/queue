@@ -50,18 +50,13 @@ abstract class BaseQueue extends StdObject implements QueueInterface
      * data serializer like 'serialize' 'json_encode'
      * @var callable
      */
-    protected $serializer = 'json_encode';
+    protected $serializer = 'serialize';
 
     /**
      * data deserializer like 'unserialize' 'json_decode'
      * @var callable
      */
-    protected $deserializer = 'json_decode';
-
-    /**
-     * @var bool
-     */
-    private $enableFailHandle = false;
+    protected $deserializer = 'unserialize';
 
     /**
      * @var callable
@@ -326,22 +321,6 @@ abstract class BaseQueue extends StdObject implements QueueInterface
     public function setDeserializer(callable $deserializer)
     {
         $this->deserializer = $deserializer;
-    }
-
-    /**
-     * @return bool
-     */
-    public function isEnableFailHandle(): bool
-    {
-        return $this->enableFailHandle;
-    }
-
-    /**
-     * @param bool $enableFailHandle
-     */
-    public function setEnablePushFailHandle($enableFailHandle = true)
-    {
-        $this->enableFailHandle = (bool)$enableFailHandle;
     }
 
     /**

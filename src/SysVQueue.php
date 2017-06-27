@@ -146,6 +146,17 @@ class SysVQueue extends BaseQueue
         return $data;
     }
 
+    public function count($priority = self::PRIORITY_NORM)
+    {
+        if ($queue = $this->queues[$priority]) {
+            $stat = msg_stat_queue($queue);
+
+            return $stat['msg_qnum'];
+        }
+
+        return 0;
+    }
+
     /**
      * create queue if it not exists.
      * @param int $priority
@@ -298,7 +309,9 @@ class SysVQueue extends BaseQueue
      */
     public function setProject($project)
     {
-        $this->project = $project;
+        if ($project = trim($project)) {
+            $this->project = $project{0};
+        }
     }
 
     /**
