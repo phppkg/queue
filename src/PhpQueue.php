@@ -57,15 +57,22 @@ class PhpQueue extends BaseQueue
     {
         // 只想取出一个 $priority 队列的数据
         if ($this->isPriority($priority)) {
-            $queue = $this->createQueue($priority);
+            // $priority 级别的队列还未初始化。
+            // $queue = $this->createQueue($priority);
+            if (!$this->hasQueue($priority)) {
+                return null;
+            }
 
-            return $queue->isEmpty() ? null : $queue->dequeue();
+            return $this->queues[$priority]->dequeue();
         }
 
         $data = null;
 
         foreach ($this->queues as $pri => $queue) {
-            $queue = $queue ?: $this->createQueue($pri);
+            // $queue = $queue ?: $this->createQueue($pri);
+            if (!$queue) {
+                continue;
+            }
 
             // valid()
             if (!$queue->isEmpty()) {
@@ -85,6 +92,15 @@ class PhpQueue extends BaseQueue
         }
 
         return 0;
+    }
+
+    /**
+     * @param int $priority
+     * @return bool
+     */
+    public function hasQueue($priority = self::PRIORITY_NORM)
+    {
+        return $this->queues[$priority] !== null;
     }
 
     /**

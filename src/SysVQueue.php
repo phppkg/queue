@@ -108,12 +108,15 @@ class SysVQueue extends BaseQueue
 
         // 只想取出一个 $priority 队列的数据
         if ($this->isPriority($priority)) {
-            // $priority 级别的队列还未初始化。create queue if it not exists.
-            $queue = $this->createQueue($priority);
+            // $priority 级别的队列还未初始化。
+            if (!$this->hasQueue($priority)) {
+                return null;
+            }
+
             $flags = $block ? 0 : (MSG_IPC_NOWAIT | MSG_NOERROR);
 
             $success = msg_receive(
-                $queue,
+                $this->queues[$priority],
                 0,  // 0 $this->msgType,
                 $this->msgType,   // $this->msgType,
                 $this->bufferSize,
@@ -155,6 +158,15 @@ class SysVQueue extends BaseQueue
         }
 
         return 0;
+    }
+
+    /**
+     * @param int $priority
+     * @return bool
+     */
+    public function hasQueue($priority = self::PRIORITY_NORM)
+    {
+        return $this->queues[$priority] !== null;
     }
 
     /**

@@ -74,13 +74,22 @@ class ShmQueue extends BaseQueue
     {
         // 只想取出一个 $priority 队列的数据
         if ($this->isPriority($priority)) {
-            return $this->createQueue($priority)->lPop();
+            // $priority 级别的队列还未初始化。
+            // $queue = $this->createQueue($priority);
+            if (!$this->hasQueue($priority)) {
+                return null;
+            }
+
+            return $this->queues[$priority]->lPop();
         }
 
         $data = null;
 
         foreach ($this->queues as $pri => $queue) {
-            $queue = $queue ?: $this->createQueue($pri);
+            // $queue = $queue ?: $this->createQueue($pri);
+            if (!$queue) {
+                continue;
+            }
 
             if (false !== ($data = $queue->lPop())) {
                 break;
@@ -98,6 +107,15 @@ class ShmQueue extends BaseQueue
         }
 
         return 0;
+    }
+
+    /**
+     * @param int $priority
+     * @return bool
+     */
+    public function hasQueue($priority = self::PRIORITY_NORM)
+    {
+        return $this->queues[$priority] !== null;
     }
 
     /**
