@@ -31,11 +31,11 @@ git clone https://github.com/inhere/php-queue.git // github
 
 ```php
 // file: examples/queue.php
-use inhere\queue\QueueInterface;
+use Inhere\Queue\QueueInterface;
 
 // require __DIR__ . '/autoload.php';
 
-$q = \inhere\queue\Queue::make([
+$q = \Inhere\Queue\Queue::make([
     'driver' => 'sysv', // shm sysv php
     'id' => 12,
 ]);

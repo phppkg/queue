@@ -6,13 +6,13 @@
  * Time: 上午1:45
  */
 
-namespace inhere\queue;
+namespace Inhere\Queue;
 
 /**
  * Class RedisQueue
  * - 操作具有原子性。并发操作不会有问题
  *
- * @package inhere\queue
+ * @package Inhere\Queue
  */
 class RedisQueue extends BaseQueue
 {

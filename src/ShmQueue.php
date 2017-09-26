@@ -6,14 +6,14 @@
  * Time: 下午8:08
  */
 
-namespace inhere\queue;
+namespace Inhere\Queue;
 
 use inhere\library\helpers\PhpHelper;
 use inhere\shm\ShmMap;
 
 /**
  * Class ShmQueue - shared memory queue
- * @package inhere\queue
+ * @package Inhere\Queue
  */
 class ShmQueue extends BaseQueue
 {

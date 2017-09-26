@@ -6,11 +6,11 @@
  * Time: 上午10:36
  */
 
-namespace inhere\queue;
+namespace Inhere\Queue;
 
 /**
  * Class Queue - queue factory
- * @package inhere\queue
+ * @package Inhere\Queue
  */
 final class Queue
 {

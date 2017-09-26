@@ -6,11 +6,11 @@
  * Time: 上午1:26
  */
 
-namespace inhere\queue;
+namespace Inhere\Queue;
 
 /**
  * Interface QueueInterface
- * @package inhere\queue
+ * @package Inhere\Queue
  *
  * @property string $driver
  */

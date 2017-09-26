@@ -6,13 +6,13 @@
  * Time: 上午12:18
  */
 
-namespace inhere\queue\utils;
+namespace Inhere\Queue\Utils;
 
-use inhere\queue\QueueInterface;
+use Inhere\Queue\QueueInterface;
 
 /**
  * Class EventHandler
- * @package inhere\queue\utils
+ * @package Inhere\Queue\Utils
  */
 class EventHandler
 {

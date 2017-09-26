@@ -6,14 +6,14 @@
  * Time: 上午1:45
  */
 
-namespace inhere\queue;
+namespace Inhere\Queue;
 
 use inhere\library\StdObject;
 use inhere\library\traits\LiteEventTrait;
 
 /**
  * Class BaseQueue
- * @package inhere\queue
+ * @package Inhere\Queue
  */
 abstract class BaseQueue extends StdObject implements QueueInterface
 {

@@ -7,11 +7,11 @@
  */
 
 
-use inhere\queue\QueueInterface;
+use Inhere\Queue\QueueInterface;
 
 require dirname(__DIR__) . '/../../autoload.php';
 
-$q = \inhere\queue\Queue::make([
+$q = \Inhere\Queue\Queue::make([
     'driver' => 'sysv', // shm sysv php
     'id' => 12,
     'serializer' => 'serialize',

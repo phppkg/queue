@@ -6,11 +6,11 @@
  * Time: 下午1:46
  */
 
-namespace inhere\queue;
+namespace Inhere\Queue;
 
 /**
  * Interface ExtendQueueInterface
- * @package inhere\queue
+ * @package Inhere\Queue
  */
 interface ExtendQueueInterface
 {

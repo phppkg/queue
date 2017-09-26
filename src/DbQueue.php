@@ -6,11 +6,11 @@
  * Time: 上午1:45
  */
 
-namespace inhere\queue;
+namespace Inhere\Queue;
 
 /**
  * Class DbQueue
- * @package inhere\queue
+ * @package Inhere\Queue
  */
 class DbQueue extends BaseQueue
 {
