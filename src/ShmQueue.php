@@ -9,7 +9,7 @@
 namespace Inhere\Queue;
 
 use inhere\library\helpers\PhpHelper;
-use inhere\shm\ShmMap;
+use Inhere\Shm\ShmMap;
 
 /**
  * Class ShmQueue - shared memory queue
