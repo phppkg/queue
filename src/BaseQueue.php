@@ -8,8 +8,8 @@
 
 namespace Inhere\Queue;
 
-use inhere\library\StdObject;
-use inhere\library\traits\LiteEventTrait;
+use Inhere\Library\StdObject;
+use Inhere\Library\Traits\LiteEventTrait;
 
 /**
  * Class BaseQueue

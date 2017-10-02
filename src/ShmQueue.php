@@ -8,7 +8,7 @@
 
 namespace Inhere\Queue;
 
-use inhere\library\helpers\PhpHelper;
+use Inhere\Library\Helpers\PhpHelper;
 use Inhere\Shm\ShmMap;
 
 /**
