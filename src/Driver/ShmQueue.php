@@ -2,34 +2,49 @@
 /**
  * Created by PhpStorm.
  * User: inhere
- * Date: 2017/5/21
- * Time: 上午1:45
+ * Date: 2017/5/31
+ * Time: 下午8:08
  */
 
-namespace Inhere\Queue;
+namespace Inhere\Queue\Driver;
+
+use Inhere\Library\Helpers\PhpHelper;
+use Inhere\Shm\ShmMap;
 
 /**
- * Class PhpQueue
- * @package Inhere\Queue
+ * Class ShmQueue - shared memory queue
+ * @package Inhere\Queue\Driver
  */
-class PhpQueue extends BaseQueue
+class ShmQueue extends BaseQueue
 {
     /**
-     * @var \SplQueue[]
+     * @var ShmMap[]
      */
     private $queues = [];
 
     /**
-     * {@inheritdoc}
+     * shm options
+     * @var array
+     */
+    private $options = [
+        'size' => 256000,
+        'project' => 's', // shared memory, semaphore NOTICE: Length can be only one
+        'tmpDir' => '/tmp', // tmp path
+    ];
+
+    /**
+     * {@inheritDoc}
+     * @throws \LogicException
      */
     protected function init()
     {
         parent::init();
 
-        $this->driver = Queue::DRIVER_PHP;
+        $this->driver = Queue::DRIVER_SHM;
 
-        if (!$this->id) {
-            $this->id = $this->driver;
+        if ($this->id <= 0) {
+            // 定义共享内存,信号量key
+            $this->id = PhpHelper::ftok(__FILE__, $this->options['project']);
         }
 
         // create queues
@@ -37,7 +52,10 @@ class PhpQueue extends BaseQueue
     }
 
     /**
-     * {@inheritDoc}
+     * @param $data
+     * @param int $priority
+     * @return bool
+     * @throws \RuntimeException
      */
     protected function doPush($data, $priority = self::PRIORITY_NORM)
     {
@@ -45,13 +63,12 @@ class PhpQueue extends BaseQueue
             $priority = self::PRIORITY_NORM;
         }
 
-        $this->createQueue($priority)->enqueue($data); // can use push().
-
-        return true;
+        return $this->createQueue($priority)->rPush($data);
     }
 
     /**
      * {@inheritDoc}
+     * @throws \RuntimeException
      */
     protected function doPop($priority = null, $block = false)
     {
@@ -63,7 +80,7 @@ class PhpQueue extends BaseQueue
                 return null;
             }
 
-            return $this->queues[$priority]->dequeue();
+            return $this->queues[$priority]->lPop();
         }
 
         $data = null;
@@ -74,9 +91,7 @@ class PhpQueue extends BaseQueue
                 continue;
             }
 
-            // valid()
-            if (!$queue->isEmpty()) {
-                $data = $queue->dequeue();// can use shift().
+            if (false !== ($data = $queue->lPop())) {
                 break;
             }
         }
@@ -104,22 +119,39 @@ class PhpQueue extends BaseQueue
     }
 
     /**
+     * {@inheritDoc}
+     */
+    public function close()
+    {
+        parent::close();
+
+        foreach ($this->queues as $key => $queue) {
+            if ($queue) {
+                $queue->close();
+                $this->queues[$key] = null;
+            }
+        }
+    }
+
+    /**
      * create queue if it not exists.
      * @param int $priority
-     * @return \SplQueue
+     * @return ShmMap
+     * @throws \RuntimeException
      */
     protected function createQueue($priority)
     {
         if (!$this->queues[$priority]) {
-            $this->queues[$priority] = new \SplQueue();
-            $this->queues[$priority]->setIteratorMode(\SplQueue::IT_MODE_DELETE);
+            $config = $this->getOptions();
+            $config['key'] = $this->intChannels[$priority];
+            $this->queues[$priority] = new ShmMap($config);
         }
 
         return $this->queues[$priority];
     }
 
     /**
-     * @return \SplQueue[]
+     * @return ShmMap[]
      */
     public function getQueues()
     {
@@ -128,7 +160,7 @@ class PhpQueue extends BaseQueue
 
     /**
      * @param int $priority
-     * @return \SplQueue|false
+     * @return ShmMap|false
      */
     public function getQueue($priority = self::PRIORITY_NORM)
     {
@@ -140,29 +172,18 @@ class PhpQueue extends BaseQueue
     }
 
     /**
-     * @param int $priority
-     * @return array|null
+     * @return array
      */
-    public function getStat($priority = self::PRIORITY_NORM)
+    public function getOptions(): array
     {
-        if ($q = $this->getQueue($priority)) {
-            return [
-                'num' => $q->count(),
-            ];
-        }
-
-        return null;
+        return $this->options;
     }
 
     /**
-     * close
+     * @param array $options
      */
-    public function close()
+    public function setOptions(array $options)
     {
-        parent::close();
-
-        foreach ($this->getPriorities() as $p) {
-            $this->queues[$p] = null;
-        }
+        $this->options = array_merge($this->options, $options);
     }
 }

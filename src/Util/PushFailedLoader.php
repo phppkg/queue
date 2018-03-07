@@ -6,11 +6,11 @@
  * Time: 上午12:32
  */
 
-namespace Inhere\Queue\Utils;
+namespace Inhere\Queue\Util;
 
 /**
  * Class PushFailedLoader
- * @package Inhere\Queue\Utils
+ * @package Inhere\Queue\Util
  */
 class PushFailedLoader
 {

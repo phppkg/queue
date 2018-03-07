@@ -8,6 +8,12 @@
 
 namespace Inhere\Queue;
 
+use Inhere\Queue\Driver\DbQueue;
+use Inhere\Queue\Driver\PhpQueue;
+use Inhere\Queue\Driver\RedisQueue;
+use Inhere\Queue\Driver\ShmQueue;
+use Inhere\Queue\Driver\SysVQueue;
+
 /**
  * Class Queue - queue factory
  * @package Inhere\Queue

@@ -6,14 +6,14 @@
  * Time: 上午1:45
  */
 
-namespace Inhere\Queue;
+namespace Inhere\Queue\Driver;
 
-use Inhere\Library\StdObject;
-use Inhere\Library\Traits\LiteEventTrait;
+use MyLib\ObjUtil\Obj;
+use MyLib\SimpleEvent\LiteEventTrait;
 
 /**
  * Class BaseQueue
- * @package Inhere\Queue
+ * @package Inhere\Queue\Driver
  */
 abstract class BaseQueue extends StdObject implements QueueInterface
 {
@@ -79,7 +79,7 @@ abstract class BaseQueue extends StdObject implements QueueInterface
      */
     public function __construct(array $config = [])
     {
-        parent::__construct($config);
+        Obj::init($config);
 
         // init property
         $this->getChannels();

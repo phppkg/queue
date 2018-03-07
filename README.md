@@ -6,7 +6,7 @@ php的队列使用包装, 默认自带支持 `高 high` `中 norm` `低 low` 三
 - `PhpQueue` 基于 php `SplQueue` 实现
 - `RedisQueue` 基于 redis 实现 - 操作具有原子性,并发操作不会有问题
 - `ShmQueue` 基于共享内存实现  - 操作会自动加锁,并发操作不会有问题
-- `SysVQueue` 基于 *nix 系统的 system v message 实现. php 需启用 `--enable-sysvmsg` 通常是默认开启的 :) 
+- `SysVQueue` 基于 *nix 系统的 system v message 实现. php 需启用 `--enable-sysvmsg` 通常是默认开启的 :)
 
 ## 安装
 
@@ -23,14 +23,14 @@ php的队列使用包装, 默认自带支持 `高 high` `中 norm` `低 low` 三
 - 直接拉取
 
 ```bash
-git clone https://git.oschina.net/inhere/php-queue.git // git@osc
+git clone https://gitee.com/inhere/php-queue.git // gitee
 git clone https://github.com/inhere/php-queue.git // github
 ```
 
 ## 使用
 
 ```php
-// file: examples/queue.php
+// file: example/queue.php
 use Inhere\Queue\QueueInterface;
 
 // require __DIR__ . '/autoload.php';
@@ -56,10 +56,10 @@ while ($i--) {
 }
 ```
 
-run `php examples/queue.php`. output:
+run `php example/queue.php`. output:
 
 ```
-% php examples/queue.php                                                                                                                                                     17-06-11 - 22:36:01
+% php example/queue.php                                                                                                                                                     17-06-11 - 22:36:01
 driver is sysv
 string(2) "h1"
 string(2) "n1"

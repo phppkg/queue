@@ -6,11 +6,11 @@
  * Time: 上午1:45
  */
 
-namespace Inhere\Queue;
+namespace Inhere\Queue\Driver;
 
 /**
  * Class DbQueue
- * @package Inhere\Queue
+ * @package Inhere\Queue\Driver
  */
 class DbQueue extends BaseQueue
 {
@@ -152,7 +152,7 @@ class DbQueue extends BaseQueue
         return <<<EOF
 CREATE TABLE IF NOT EXISTS `$tName` (
 	`id` INT(11) NOT NULL AUTO_INCREMENT,
-	`queue` CHAR(48) NOT NULL COMMENT 'queue name', 
+	`queue` CHAR(48) NOT NULL COMMENT 'queue name',
 	`data` TEXT NOT NULL COMMENT 'task data',
 	`priority` TINYINT(2) UNSIGNED NOT NULL DEFAULT 1,
 	`created_at` INT(10) UNSIGNED NOT NULL,
@@ -175,7 +175,7 @@ EOF;
         return <<<EOF
 CREATE TABLE IF NOT EXISTS `$tName` (
 	`id` INTEGER PRIMARY KEY NOT NULL,
-	`queue` CHAR(48) NOT NULL COMMENT 'queue name', 
+	`queue` CHAR(48) NOT NULL COMMENT 'queue name',
 	`data` TEXT NOT NULL COMMENT 'task data',
 	`priority` INTEGER(2) NOT NULL DEFAULT 1,
 	`created_at` INTEGER(10) NOT NULL,

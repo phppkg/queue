@@ -3,11 +3,11 @@
  * @from https://github.com/matyhtf/framework/blob/master/libs/Swoole/Queue/MsgQ.php
  */
 
-namespace Inhere\Queue;
+namespace Inhere\Queue\Driver;
 
 /**
  * Class SysVQueue - by system v message queue
- * @package Inhere\Queue
+ * @package Inhere\Queue\Driver
  */
 class SysVQueue extends BaseQueue
 {
