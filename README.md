@@ -72,6 +72,26 @@ string(2) "n4"
 string(2) "l1"
 ```
 
+## 其他
+
+system v 内存查看：
+
+```bash
+ipcs
+ipcs -a // 命令可以查看当前使用的共享内存、消息队列及信号量所有信息
+ipcs -p // 命令可以得到与共享内存、消息队列相关进程之间的消息
+ipcs -u // 命令可以查看各个资源的使用总结信息
+```
+
+删除共享内存：
+
+```bash
+$ ipcrm
+
+usage: ipcrm [-q msqid] [-m shmid] [-s semid]
+             [-Q msgkey] [-M shmkey] [-S semkey] ...
+```
+
 ## License
 
 MIT
