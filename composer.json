@@ -14,9 +14,9 @@
   ],
   "require": {
     "php": ">7.0.0",
-    "inhere/shm": "~1.0",
-    "mylib/simple-event": "~1.0",
-    "mylib/obj-utils": "~1.0"
+    "php-comp/shm": "~1.0",
+    "toolkit/simple-event": "~1.0",
+    "toolkit/obj-utils": "~1.0"
   },
   "autoload": {
     "psr-4": {
